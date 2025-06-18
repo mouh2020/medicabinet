@@ -26,6 +26,16 @@ class AppointmentController extends Controller
             'status' => 'in:scheduled,completed,cancelled',
         ]);
 
+        // Check for existing 'scheduled' appointment at the same time
+        $exists = Appointment::where('patient_id', Auth::id())
+            ->where('time', $request->time)
+            ->where('status', 'scheduled')
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'You already have a scheduled appointment at this time.'], 409);
+        }
+
         $appointment = Appointment::create([
             'patient_id' => Auth::id(),
             'time' => $request->time,
