@@ -1,48 +1,48 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
-// Auth Controllers
 use App\Http\Controllers\Api\V1\Auth\DoctorAuthController;
 use App\Http\Controllers\Api\V1\Auth\AssistantAuthController;
 use App\Http\Controllers\Api\V1\Auth\PatientAuthController;
 
-// Appointment Controllers
-use App\Http\Controllers\Api\V1\Patient\AppointmentController as PatientAppointmentController;
+// Doctor Controllers
 use App\Http\Controllers\Api\V1\Doctor\AppointmentController as DoctorAppointmentController;
-use App\Http\Controllers\Api\V1\Assistant\AppointmentController as AssistantAppointmentController;
-
-// Consultation & Prescription Controllers
 use App\Http\Controllers\Api\V1\Doctor\ConsultationController as DoctorConsultationController;
 use App\Http\Controllers\Api\V1\Doctor\PrescriptionController as DoctorPrescriptionController;
-use App\Http\Controllers\Api\V1\Patient\ConsultationController as PatientConsultationController;
-use App\Http\Controllers\Api\V1\Patient\PrescriptionController as PatientPrescriptionController;
-
-// Doctor Manages Assistants & Patients
 use App\Http\Controllers\Api\V1\Doctor\AssistantController as DoctorAssistantController;
 use App\Http\Controllers\Api\V1\Doctor\PatientController as DoctorPatientController;
 
-// Assistant Manages Patients
+// Assistant Controllers
+use App\Http\Controllers\Api\V1\Assistant\AppointmentController as AssistantAppointmentController;
 use App\Http\Controllers\Api\V1\Assistant\PatientController as AssistantPatientController;
+
+// Patient Controllers
+use App\Http\Controllers\Api\V1\Patient\AppointmentController as PatientAppointmentController;
+use App\Http\Controllers\Api\V1\Patient\ConsultationController as PatientConsultationController;
+use App\Http\Controllers\Api\V1\Patient\PrescriptionController as PatientPrescriptionController;
 
 Route::prefix('v1')->group(function () {
 
-    // 🔐 Public Auth Routes
-    Route::post('/doctor/login', [DoctorAuthController::class, 'login']);
-    Route::post('/doctor/register', [DoctorAuthController::class, 'register']);
-    Route::post('/assistant/login', [AssistantAuthController::class, 'login']);
-    Route::post('/patient/login', [PatientAuthController::class, 'login']);
-    Route::post('/patient/register', [PatientAuthController::class, 'register']);
-    
+    // 🟢 Public Auth Routes
+    Route::prefix('doctor')->group(function () {
+        Route::post('login', [DoctorAuthController::class, 'login']);
+        Route::post('register', [DoctorAuthController::class, 'register']);
+    });
 
-    // 🔒 Logout Routes (Protected)
-    Route::middleware(['auth:sanctum', 'doctor'])->post('/doctor/logout', [DoctorAuthController::class, 'logout']);
-    Route::middleware(['auth:sanctum', 'assistant'])->post('/assistant/logout', [AssistantAuthController::class, 'logout']);
-    Route::middleware(['auth:sanctum', 'patient'])->post('/patient/logout', [PatientAuthController::class, 'logout']);
+    Route::prefix('assistant')->group(function () {
+        Route::post('login', [AssistantAuthController::class, 'login']);
+    });
+
+    Route::prefix('patient')->group(function () {
+        Route::post('login', [PatientAuthController::class, 'login']);
+        Route::post('register', [PatientAuthController::class, 'register']);
+    });
+
+    // 🔒 Protected Routes
 
     // 👨‍⚕️ Doctor Routes
-    Route::middleware(['auth:sanctum', 'doctor'])->group(function () {
+    Route::prefix('doctor')->middleware(['auth:sanctum', 'doctor'])->group(function () {
+        Route::post('logout', [DoctorAuthController::class, 'logout']);
         Route::apiResource('appointments', DoctorAppointmentController::class)->only(['index', 'update', 'destroy']);
         Route::apiResource('consultations', DoctorConsultationController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::apiResource('prescriptions', DoctorPrescriptionController::class)->only(['index', 'store', 'update', 'destroy']);
@@ -51,16 +51,18 @@ Route::prefix('v1')->group(function () {
     });
 
     // 👩‍⚕️ Assistant Routes
-    Route::middleware(['auth:sanctum', 'assistant'])->group(function () {
+    Route::prefix('assistant')->middleware(['auth:sanctum', 'assistant'])->group(function () {
+        Route::post('logout', [AssistantAuthController::class, 'logout']);
         Route::apiResource('appointments', AssistantAppointmentController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::apiResource('patients', AssistantPatientController::class);
     });
 
     // 🧑‍🍼 Patient Routes
-    Route::middleware(['auth:sanctum', 'patient'])->group(function () {
+    Route::prefix('patient')->middleware(['auth:sanctum', 'patient'])->group(function () {
+        Route::post('logout', [PatientAuthController::class, 'logout']);
         Route::apiResource('appointments', PatientAppointmentController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::get('/consultations', [PatientConsultationController::class, 'index']);
-        Route::get('/prescriptions', [PatientPrescriptionController::class, 'index']);
+        Route::get('consultations', [PatientConsultationController::class, 'index']);
+        Route::get('prescriptions', [PatientPrescriptionController::class, 'index']);
     });
 
 });

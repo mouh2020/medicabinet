@@ -30,6 +30,7 @@ const Register = () => {
       const res = await axios.post('patient/register', formData);
       localStorage.setItem('token', res.data.token);
       setMessage('Registration successful');
+      window.location.href = '/patient/dashboard';
     } catch (err) {
       setError('Registration failed');
     }
