@@ -25,10 +25,10 @@ function ScheduleAppointment({ onScheduled }) {
 
         try {
             await axios.post('/appointments', { time: newTime }, config);
-            alert("Your appointment scheduled at:",newTime);
+            alert("Your appointment scheduled");
         } catch (err) {
             console.error('scheduling appointment:', err);
-            setError('Failed to schedule appointment');
+            alert("Failed to schedule appointment");
         } finally {
             setLoading(false);
         }
