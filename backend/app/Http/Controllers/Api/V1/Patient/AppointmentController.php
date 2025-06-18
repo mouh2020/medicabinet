@@ -39,10 +39,10 @@ class AppointmentController extends Controller
     // Reschedule
     public function update(Request $request, $id)
     {
-        $appointment = Appointment::where('id', $id)->where('patient_id', Auth::id())->first();
+        $appointment = Appointment::where('appointment_id', $id)->where('patient_id', Auth::id())->first();
 
         if (! $appointment) {
-            return response()->json(['error' => 'Appointment not found'], 404);
+            return response()->json(['message' => 'Appointment not found'], 404);
         }
 
         $request->validate([
@@ -59,10 +59,10 @@ class AppointmentController extends Controller
     // Cancel
     public function destroy($id)
     {
-        $appointment = Appointment::where('id', $id)->where('patient_id', Auth::id())->first();
+        $appointment = Appointment::where('appointment_id', $id)->where('patient_id', Auth::id())->first();
 
         if (! $appointment) {
-            return response()->json(['error' => 'Appointment not found'], 404);
+            return response()->json(['message' => 'Appointment not found'], 404);
         }
 
         $appointment->delete();
