@@ -4,9 +4,19 @@ import axios from '../../api/axios';
 // filepath: /home/med/Desktop/Projects/medicabinet/web_frontend/src/pages/appointments/RescheduleAppointment.jsx
 
 function RescheduleAppointment({ appointment, onRescheduled, onCancel }) {
-    const [newTime, setNewTime] = useState(() => {
-        // Default to current appointment time in "YYYY-MM-DDTHH:mm" format
-        return new Date(appointment.time).toISOString().slice(0, 16);
+    // Helper to get tomorrow's date in "YYYY-MM-DD" format
+    const getTomorrowDateString = () => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        return tomorrow.toISOString().slice(0, 10);
+    };
+
+    const [newDate, setNewDate] = useState(() => {
+        // Default to current appointment date if it's after tomorrow, else tomorrow
+        const appointmentDate = new Date(appointment.time).toISOString().slice(0, 10);
+        const tomorrow = getTomorrowDateString();
+        return appointmentDate > tomorrow ? appointmentDate : tomorrow;
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -22,7 +32,7 @@ function RescheduleAppointment({ appointment, onRescheduled, onCancel }) {
         };
 
         try {
-            await axios.put(`/appointments/${appointment.appointment_id}`, { time: newTime }, config);
+            await axios.put(`/appointments/${appointment.appointment_id}`, { time: newDate }, config);
             if (onRescheduled) onRescheduled();
         } catch (err) {
             setError('Failed to reschedule appointment');
@@ -34,13 +44,13 @@ function RescheduleAppointment({ appointment, onRescheduled, onCancel }) {
     return (
         <form onSubmit={handleSubmit} style={{ marginBottom: '1rem' }}>
             <label>
-                New Time:
+                New Date:
                 <input
                     type="date"
-                    value={newTime}
-                    onChange={(e) => setNewTime(e.target.value)}
+                    value={newDate}
+                    onChange={(e) => setNewDate(e.target.value)}
                     required
-                    min={new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16)}
+                    min={getTomorrowDateString()}
                 />
             </label>
             <button type="submit" disabled={loading}>

@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import axios from '../../api/axios';
 
-
-
 function ScheduleAppointment({ onScheduled }) {
     const [newTime, setNewTime] = useState(() => {
         const tomorrow = new Date();
@@ -26,6 +24,7 @@ function ScheduleAppointment({ onScheduled }) {
         try {
             await axios.post('/appointments', { time: newTime }, config);
             alert("Your appointment scheduled");
+            window.location.reload(); // Refresh the page to fetch updated appointments
         } catch (err) {
             console.error('scheduling appointment:', err);
             alert("Failed to schedule appointment");
@@ -43,7 +42,7 @@ function ScheduleAppointment({ onScheduled }) {
                     value={newTime}
                     onChange={(e) => setNewTime(e.target.value)}
                     required
-                    min = {new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                    min={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                 />
             </label>
             <button type="submit" disabled={loading}>
