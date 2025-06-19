@@ -32,7 +32,7 @@ class PatientController extends Controller
     {
         $request->validate([
             'full_name' => 'required|string|max:255',
-            'gender' => 'required|in:male,female,other',
+            'gender' => 'required|in:male,female',
             'phone' => 'required|string',
             'birthday' => 'nullable|date',
             'address' => 'nullable|string|max:255',
