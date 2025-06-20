@@ -1,30 +1,24 @@
 import React, { useState } from 'react';
 import axios from '../../api/axios';
+import { useNavigate } from 'react-router-dom';
 
-const DoctorLogin = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [message, setMessage] = useState('');
+const AssistantLogin = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('');
-    setError('');
     setIsLoading(true);
-
+    setError('');
+    
     try {
-      const res = await axios.post('doctor/login', formData);
+      const res = await axios.post('/assistant/login', { email, password });
       localStorage.setItem('token', res.data.token);
-      setMessage('Login successful! Redirecting to dashboard...');
-      setTimeout(() => window.location.href = '/doctor/dashboard', 1500);
+      localStorage.setItem('role', 'assistant');
+      setTimeout(() => navigate('/assistant/dashboard'), 1500);
     } catch {
       setError('Login failed. Please check your credentials.');
       setIsLoading(false);
@@ -35,29 +29,29 @@ const DoctorLogin = () => {
     <div className="login-container">
       {/* Left Panel with Branding and Features */}
       <div className="left-panel">
-        <h1>👨‍⚕️ MediCabinet Portal</h1>
-        <p className="subtitle">Advanced medicabinet care management for healthcare professionals</p>
+        <h1>👩‍⚕️ MediCabinet Portal</h1>
+        <p className="subtitle">Supporting healthcare professionals with efficient patient management</p>
         
         <div className="features">
           <div className="feature">
-            <div className="feature-icon">📊</div>
-            <h3>Patient Analytics</h3>
-            <p>Access comprehensive patient data and health metrics</p>
-          </div>
-          <div className="feature">
             <div className="feature-icon">📅</div>
-            <h3>Appointment Management</h3>
-            <p>Efficiently manage your daily appointments and schedules</p>
+            <h3>Appointment Coordination</h3>
+            <p>Efficiently manage patient schedules and appointments</p>
           </div>
           <div className="feature">
-            <div className="feature-icon">💊</div>
-            <h3>Prescription Tools</h3>
-            <p>Create and manage digital prescriptions with ease</p>
+            <div className="feature-icon">📋</div>
+            <h3>Patient Records</h3>
+            <p>Quick access to patient information</p>
+          </div>
+          <div className="feature">
+            <div className="feature-icon">🔔</div>
+            <h3>Reminder System</h3>
+            <p>Patient reminders for appointments and follow-ups</p>
           </div>
           <div className="feature">
             <div className="feature-icon">🔒</div>
-            <h3>Secure & Compliant</h3>
-            <p>HIPAA-compliant platform ensuring patient data security</p>
+            <h3>Secure Access</h3>
+            <p>Platform ensuring patient data security</p>
           </div>
         </div>
         
@@ -74,14 +68,8 @@ const DoctorLogin = () => {
             <h2>MediCabinet</h2>
           </div>
           
-          <h1 className="title">Doctor Login</h1>
-          <p className="subtitle">Access your professional dashboard</p>
-          
-          {message && (
-            <div className="message success">
-              {message}
-            </div>
-          )}
+          <h1 className="title">Medical Assistant Login</h1>
+          <p className="subtitle">Access your healthcare management tools</p>
           
           {error && (
             <div className="message error">
@@ -95,9 +83,9 @@ const DoctorLogin = () => {
               <input
                 type="email"
                 id="email"
-                name="email"
+                value={email}
                 placeholder="your.email@example.com"
-                onChange={handleChange}
+                onChange={e => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -107,9 +95,9 @@ const DoctorLogin = () => {
               <input
                 type="password"
                 id="password"
-                name="password"
+                value={password}
                 placeholder="Enter your password"
-                onChange={handleChange}
+                onChange={e => setPassword(e.target.value)}
                 required
               />
             </div>
@@ -124,7 +112,7 @@ const DoctorLogin = () => {
                   <span className="spinner"></span> Logging in...
                 </>
               ) : (
-                'Login to Dashboard'
+                'Access Dashboard'
               )}
             </button>
           </form>
@@ -141,7 +129,7 @@ const DoctorLogin = () => {
         
         .left-panel {
           flex: 1;
-          background: linear-gradient(135deg, #1e88e5, #0d47a1);
+          background: linear-gradient(135deg, #4a6fa5, #2e4c7a);
           padding: 40px;
           color: white;
           display: flex;
@@ -234,7 +222,7 @@ const DoctorLogin = () => {
         
         .logo-icon {
           font-size: 2.5rem;
-          color: #1e88e5;
+          color: #4a6fa5;
         }
         
         .logo h2 {
@@ -261,11 +249,6 @@ const DoctorLogin = () => {
           margin: 15px 0;
           font-weight: 500;
           font-size: 0.9rem;
-        }
-        
-        .success {
-          background: #d4edda;
-          color: #155724;
         }
         
         .error {
@@ -300,14 +283,14 @@ const DoctorLogin = () => {
         
         .form-group input:focus {
           outline: none;
-          border-color: #1e88e5;
-          box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.2);
+          border-color: #4a6fa5;
+          box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
         }
         
         .login-button {
           width: 100%;
           padding: 14px;
-          background: #1e88e5;
+          background: #4a6fa5;
           color: white;
           border: none;
           border-radius: 8px;
@@ -322,11 +305,11 @@ const DoctorLogin = () => {
         }
         
         .login-button:hover:not(:disabled) {
-          background: #1565c0;
+          background: #3a5a8a;
         }
         
         .login-button:disabled {
-          background: #90caf9;
+          background: #90a9d1;
           cursor: not-allowed;
         }
         
@@ -362,4 +345,4 @@ const DoctorLogin = () => {
   );
 };
 
-export default DoctorLogin;
+export default AssistantLogin;

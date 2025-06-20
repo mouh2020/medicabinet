@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from '../../api/axios';
 
 const PAGE_SIZE = 5;
@@ -29,151 +29,33 @@ const Pagination = ({ page, total, pageSize, onPageChange }) => {
   );
 };
 
-const ConsultationForm = ({ patientId, token, onSaved, initialNotes, consultationId }) => {
-  const [notes, setNotes] = useState(initialNotes || '');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    const data = { patient_id: patientId, notes };
-    
-    try {
-      if (consultationId) {
-        await axios.put(`/doctor/consultations/${consultationId}`, data, config);
-      } else {
-        await axios.post('/doctor/consultations', data, config);
-      }
-      onSaved();
-      setNotes('');
-    } catch (err) {
-      alert('Failed to save consultation');
-    }
-    setIsLoading(false);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="consultation-form">
-      <textarea
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder="Enter consultation notes"
-        required
-        rows={4}
-      />
-      <div className="form-actions">
-        <button type="submit" className="primary-button" disabled={isLoading}>
-          {isLoading ? 'Saving...' : 'Save Consultation'}
-        </button>
-        {consultationId && (
-          <button 
-            type="button" 
-            className="secondary-button"
-            onClick={() => onSaved()}
-          >
-            Cancel
-          </button>
-        )}
-      </div>
-    </form>
-  );
-};
-
-const PrescriptionForm = ({ patientId, token, onSaved, initialContent, prescriptionId }) => {
-  const [content, setContent] = useState(initialContent || '');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    const data = { patient_id: patientId, content };
-    
-    try {
-      if (prescriptionId) {
-        await axios.put(`/doctor/prescriptions/${prescriptionId}`, data, config);
-      } else {
-        await axios.post('/doctor/prescriptions', data, config);
-      }
-      onSaved();
-      setContent('');
-    } catch (err) {
-      alert('Failed to save prescription');
-    }
-    setIsLoading(false);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="prescription-form">
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="Enter prescription details"
-        required
-        rows={4}
-      />
-      <div className="form-actions">
-        <button type="submit" className="primary-button" disabled={isLoading}>
-          {isLoading ? 'Saving...' : 'Save Prescription'}
-        </button>
-        {prescriptionId && (
-          <button 
-            type="button" 
-            className="secondary-button"
-            onClick={() => onSaved()}
-          >
-            Cancel
-          </button>
-        )}
-      </div>
-    </form>
-  );
-};
-
 const PatientDetails = ({ patientId, token, onClose }) => {
   const [patient, setPatient] = useState(null);
-  const [consultations, setConsultations] = useState([]);
-  const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editPatient, setEditPatient] = useState(false);
-  const [editConsultationId, setEditConsultationId] = useState(null);
-  const [editPrescriptionId, setEditPrescriptionId] = useState(null);
   const [patientForm, setPatientForm] = useState({});
-  const [consultationPage, setConsultationPage] = useState(1);
-  const [prescriptionPage, setPrescriptionPage] = useState(1);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = async () => {
     setLoading(true);
     const config = { headers: { Authorization: `Bearer ${token}` } };
     try {
-      const [pRes, cRes, prRes] = await Promise.all([
-        axios.get(`/doctor/patients/${patientId}`, config),
-        axios.get(`/doctor/consultations?patient_id=${patientId}`, config),
-        axios.get(`/doctor/prescriptions?patient_id=${patientId}`, config)
-      ]);
+      const pRes = await axios.get(`/assistant/patients/${patientId}`, config);
       setPatient(getPatientFromResponse(pRes.data));
       setPatientForm(getPatientFromResponse(pRes.data));
-      setConsultations(cRes.data.consultations || []);
-      setPrescriptions(prRes.data.prescriptions || []);
     } catch {
       setPatient(null);
-      setConsultations([]);
-      setPrescriptions([]);
     }
     setLoading(false);
-  }, [token, patientId]);
+  };
 
   useEffect(() => {
     fetchData();
-    setConsultationPage(1);
-    setPrescriptionPage(1);
-  }, [fetchData]);
+  }, [patientId, token]);
 
   const handlePatientEdit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/doctor/patients/${patientId}`, patientForm, {
+      await axios.put(`/assistant/patients/${patientId}`, patientForm, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchData();
@@ -182,33 +64,6 @@ const PatientDetails = ({ patientId, token, onClose }) => {
       alert('Failed to update patient');
     }
   };
-
-  const handleDeleteConsultation = async (id) => {
-    if (!window.confirm('Delete this consultation?')) return;
-    try {
-      await axios.delete(`/doctor/consultations/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchData();
-    } catch {
-      alert('Failed to delete consultation');
-    }
-  };
-
-  const handleDeletePrescription = async (id) => {
-    if (!window.confirm('Delete this prescription?')) return;
-    try {
-      await axios.delete(`/doctor/prescriptions/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchData();
-    } catch {
-      alert('Failed to delete prescription');
-    }
-  };
-
-  const pagedConsultations = consultations.slice((consultationPage - 1) * PAGE_SIZE, consultationPage * PAGE_SIZE);
-  const pagedPrescriptions = prescriptions.slice((prescriptionPage - 1) * PAGE_SIZE, prescriptionPage * PAGE_SIZE);
 
   if (loading) return (
     <div className="modal-overlay">
@@ -268,6 +123,22 @@ const PatientDetails = ({ patientId, token, onClose }) => {
                   required 
                 />
               </div>
+              <div className="form-group">
+                <label>Phone</label>
+                <input 
+                  value={patientForm.phone || ''} 
+                  onChange={e => setPatientForm(f => ({ ...f, phone: e.target.value }))} 
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Address</label>
+                <input 
+                  value={patientForm.address || ''} 
+                  onChange={e => setPatientForm(f => ({ ...f, address: e.target.value }))} 
+                  required 
+                />
+              </div>
               <div className="form-actions">
                 <button type="submit" className="primary-button">Save Changes</button>
                 <button type="button" onClick={() => setEditPatient(false)} className="secondary-button">Cancel</button>
@@ -299,163 +170,7 @@ const PatientDetails = ({ patientId, token, onClose }) => {
                 <span className="info-label">Phone:</span>
                 <span className="info-value">{patient.phone || 'N/A'}</span>
               </div>
-              <div className="info-item">
-                <span className="info-label">Birthday:</span>
-                <span className="info-value">{patient.birthday || 'N/A'}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Weight:</span>
-                <span className="info-value">{patient.weight ? `${patient.weight} kg` : 'N/A'}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">Height:</span>
-                <span className="info-value">{patient.height ? `${patient.height} cm` : 'N/A'}</span>
-              </div>
             </div>
-          )}
-        </div>
-
-        <div className="section">
-          <div className="section-header">
-            <h3>📝 Consultations</h3>
-          </div>
-          
-          <ConsultationForm 
-            patientId={patientId} 
-            token={token} 
-            onSaved={() => {
-              fetchData();
-              setEditConsultationId(null);
-            }} 
-          />
-          
-          {consultations.length === 0 ? (
-            <div className="empty-state">No consultations found for this patient.</div>
-          ) : (
-            <>
-              <div className="records-list">
-                {pagedConsultations.map(c => (
-                  <div key={c.consultation_id} className="record-card">
-                    {editConsultationId === c.consultation_id ? (
-                      <ConsultationForm 
-                        patientId={patientId}
-                        token={token}
-                        initialNotes={c.notes}
-                        consultationId={c.consultation_id}
-                        onSaved={() => {
-                          setEditConsultationId(null);
-                          fetchData();
-                        }}
-                      />
-                    ) : (
-                      <>
-                        <div className="record-header">
-                          <span className="record-date">
-                            {new Date(c.created_at).toLocaleDateString()} at{' '}
-                            {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                          <div className="record-actions">
-                            <button 
-                              onClick={() => setEditConsultationId(c.consultation_id)} 
-                              className="edit-button"
-                            >
-                              Edit
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteConsultation(c.consultation_id)} 
-                              className="delete-button"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                        <div className="record-content">
-                          <p>{c.notes}</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <Pagination
-                page={consultationPage}
-                total={consultations.length}
-                pageSize={PAGE_SIZE}
-                onPageChange={setConsultationPage}
-              />
-            </>
-          )}
-        </div>
-
-        <div className="section">
-          <div className="section-header">
-            <h3>💊 Prescriptions</h3>
-          </div>
-          
-          <PrescriptionForm 
-            patientId={patientId} 
-            token={token} 
-            onSaved={() => {
-              fetchData();
-              setEditPrescriptionId(null);
-            }} 
-          />
-          
-          {prescriptions.length === 0 ? (
-            <div className="empty-state">No prescriptions found for this patient.</div>
-          ) : (
-            <>
-              <div className="records-list">
-                {pagedPrescriptions.map(p => (
-                  <div key={p.prescription_id} className="record-card">
-                    {editPrescriptionId === p.prescription_id ? (
-                      <PrescriptionForm 
-                        patientId={patientId}
-                        token={token}
-                        initialContent={p.content}
-                        prescriptionId={p.prescription_id}
-                        onSaved={() => {
-                          setEditPrescriptionId(null);
-                          fetchData();
-                        }}
-                      />
-                    ) : (
-                      <>
-                        <div className="record-header">
-                          <span className="record-date">
-                            {new Date(p.created_at).toLocaleDateString()} at{' '}
-                            {new Date(p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                          <div className="record-actions">
-                            <button 
-                              onClick={() => setEditPrescriptionId(p.prescription_id)} 
-                              className="edit-button"
-                            >
-                              Edit
-                            </button>
-                            <button 
-                              onClick={() => handleDeletePrescription(p.prescription_id)} 
-                              className="delete-button"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                        <div className="record-content">
-                          <p>{p.content}</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <Pagination
-                page={prescriptionPage}
-                total={prescriptions.length}
-                pageSize={PAGE_SIZE}
-                onPageChange={setPrescriptionPage}
-              />
-            </>
           )}
         </div>
       </div>
@@ -463,22 +178,23 @@ const PatientDetails = ({ patientId, token, onClose }) => {
   );
 };
 
-const DoctorDashboard = () => {
+const AssistantDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState({});
   const [error, setError] = useState('');
   const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [patientPage, setPatientPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [updatingStatus, setUpdatingStatus] = useState({});
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem('token');
 
-  const fetchAppointments = useCallback(async () => {
+  const fetchAppointments = async () => {
     setLoading(true);
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get('doctor/appointments', config);
+      const res = await axios.get('assistant/appointments', config);
       setAppointments(res.data.appointments);
 
       const patientIds = [...new Set(res.data.appointments.map(a => a.patient_id))];
@@ -486,7 +202,7 @@ const DoctorDashboard = () => {
 
       await Promise.all(
         patientIds.map(async (id) => {
-          const pRes = await axios.get(`/doctor/patients/${id}`, config);
+          const pRes = await axios.get(`/assistant/patients/${id}`, config);
           patientData[id] = getPatientFromResponse(pRes.data);
         })
       );
@@ -494,34 +210,42 @@ const DoctorDashboard = () => {
       setPatients(patientData);
       setLoading(false);
     } catch (err) {
-      setError('Failed to load doctor dashboard');
+      setError('Failed to load assistant dashboard');
       setLoading(false);
     }
-  }, [token]);
+  };
 
   useEffect(() => {
     fetchAppointments();
-  }, [fetchAppointments]);
+  }, [token]);
 
   const handleStatusUpdate = async (appointmentId, newStatus) => {
-    if (!window.confirm(`Mark appointment as ${newStatus}?`)) return;
+    if (!window.confirm(`Change appointment status to ${newStatus}?`)) return;
+    
     try {
-      await axios.put(`/doctor/appointments/${appointmentId}`, { status: newStatus }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      setUpdatingStatus(prev => ({ ...prev, [appointmentId]: true }));
+      
+      await axios.put(
+        `/assistant/appointments/${appointmentId}`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
       fetchAppointments();
-    } catch {
-      alert(`Failed to update appointment status`);
+    } catch (err) {
+      alert('Failed to update appointment status');
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [appointmentId]: false }));
     }
   };
 
   const handleLogout = async () => {
     try {
-      await axios.post('/doctor/logout', {}, {
+      await axios.post('/assistant/logout', {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (e) {
-      // ignore error, proceed to logout anyway
+      // ignore error, proceed to clear token
     }
     localStorage.removeItem('token');
     window.location.href = '/login';
@@ -556,11 +280,11 @@ const DoctorDashboard = () => {
   const pagedAppointments = sortedAppointments.filter(a => pagedPatientIds.includes(a.patient_id));
 
   return (
-    <div className="doctor-dashboard">
+    <div className="assistant-dashboard">
       <div className="dashboard-header">
         <div className="header-left">
-          <span className="dashboard-icon">👨‍⚕️</span>
-          <h1>Doctor Dashboard</h1>
+          <span className="dashboard-icon">👩‍⚕️</span>
+          <h1>Medical Assistant Dashboard</h1>
         </div>
         <button onClick={handleLogout} className="logout-button">
           🚪 Logout
@@ -599,7 +323,7 @@ const DoctorDashboard = () => {
           </div>
         ) : pagedAppointments.length === 0 ? (
           <div className="empty-state">
-            <p>No appointments found</p>
+            <p>No appointments scheduled for today</p>
           </div>
         ) : (
           <div className="appointments-grid">
@@ -623,22 +347,22 @@ const DoctorDashboard = () => {
                 </div>
                 
                 <div className="appointment-actions">
-                  {appt.status === 'scheduled' && (
-                    <>
-                      <button 
-                        onClick={() => handleStatusUpdate(appt.appointment_id, 'completed')}
-                        className="action-button complete"
-                      >
-                        Complete
-                      </button>
-                      <button 
-                        onClick={() => handleStatusUpdate(appt.appointment_id, 'cancelled')}
-                        className="action-button cancel"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  )}
+                  <div className="status-select">
+                    <label>Status:</label>
+                    <select 
+                      value={appt.status} 
+                      onChange={(e) => handleStatusUpdate(appt.appointment_id, e.target.value)}
+                      disabled={updatingStatus[appt.appointment_id]}
+                    >
+                      <option value="scheduled">Scheduled</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    {updatingStatus[appt.appointment_id] && (
+                      <span className="updating-indicator">Updating...</span>
+                    )}
+                  </div>
+                  
                   <button 
                     onClick={() => setSelectedPatientId(appt.patient_id)}
                     className="action-button view"
@@ -668,7 +392,7 @@ const DoctorDashboard = () => {
       )}
       
       <style jsx>{`
-        .doctor-dashboard {
+        .assistant-dashboard {
           max-width: 1200px;
           margin: 0 auto;
           padding: 20px;
@@ -858,35 +582,44 @@ const DoctorDashboard = () => {
         
         .appointment-actions {
           display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        
+        .status-select {
+          display: flex;
+          align-items: center;
           gap: 10px;
         }
         
-        .action-button {
+        .status-select label {
+          font-weight: 500;
+          font-size: 0.95rem;
+        }
+        
+        .status-select select {
+          padding: 8px 12px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          background: white;
           flex: 1;
+        }
+        
+        .updating-indicator {
+          color: #7f8c8d;
+          font-size: 0.85rem;
+          margin-left: 10px;
+        }
+        
+        .action-button {
+          width: 100%;
           padding: 8px 12px;
           border: none;
           border-radius: 6px;
           font-weight: 500;
           cursor: pointer;
           transition: background 0.3s;
-        }
-        
-        .action-button.complete {
-          background: #4caf50;
-          color: white;
-        }
-        
-        .action-button.complete:hover {
-          background: #388e3c;
-        }
-        
-        .action-button.cancel {
-          background: #f44336;
-          color: white;
-        }
-        
-        .action-button.cancel:hover {
-          background: #d32f2f;
+          text-align: center;
         }
         
         .action-button.view {
@@ -981,7 +714,7 @@ const DoctorDashboard = () => {
           background: white;
           border-radius: 12px;
           width: 90%;
-          max-width: 800px;
+          max-width: 500px;
           max-height: 90vh;
           overflow-y: auto;
           padding: 30px;
@@ -1002,14 +735,6 @@ const DoctorDashboard = () => {
         
         .section {
           margin-bottom: 30px;
-          padding-bottom: 30px;
-          border-bottom: 1px solid #eee;
-        }
-        
-        .section:last-child {
-          border-bottom: none;
-          margin-bottom: 0;
-          padding-bottom: 0;
         }
         
         .section-header {
@@ -1075,7 +800,7 @@ const DoctorDashboard = () => {
         
         .patient-info-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
           gap: 15px;
         }
         
@@ -1095,79 +820,14 @@ const DoctorDashboard = () => {
           font-size: 1rem;
         }
         
-        .records-list {
-          display: grid;
-          gap: 15px;
-          margin-top: 20px;
-        }
-        
-        .record-card {
-          border: 1px solid #e0e0e0;
-          border-radius: 8px;
-          padding: 15px;
-          background: #f9f9f9;
-        }
-        
-        .record-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 10px;
-          padding-bottom: 10px;
-          border-bottom: 1px solid #eee;
-        }
-        
-        .record-date {
-          color: #7f8c8d;
-          font-size: 0.9rem;
-        }
-        
-        .record-actions {
-          display: flex;
-          gap: 10px;
-        }
-        
-        .edit-button, .delete-button {
-          padding: 5px 12px;
-          border: none;
-          border-radius: 4px;
-          font-size: 0.85rem;
-          cursor: pointer;
-        }
-        
         .edit-button {
           background: #e3f2fd;
           color: #1976d2;
-        }
-        
-        .delete-button {
-          background: #ffebee;
-          color: #d32f2f;
-        }
-        
-        .record-content {
-          padding: 10px 0;
-          white-space: pre-wrap;
-        }
-        
-        .consultation-form,
-        .prescription-form {
-          background: #f8f9fa;
-          border-radius: 8px;
-          padding: 15px;
-          margin-bottom: 20px;
-        }
-        
-        .consultation-form textarea,
-        .prescription-form textarea {
-          width: 100%;
-          padding: 12px;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          font-family: inherit;
-          font-size: 1rem;
-          resize: vertical;
-          min-height: 100px;
+          border: none;
+          padding: 8px 15px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 500;
         }
         
         @keyframes spin {
@@ -1179,4 +839,4 @@ const DoctorDashboard = () => {
   );
 };
 
-export default DoctorDashboard;
+export default AssistantDashboard;

@@ -17,7 +17,7 @@ function Appointments() {
             },
         };
         try {
-            const response = await axios.get('/appointments', config);
+            const response = await axios.get('patient/appointments', config);
             if (response.data && response.data.appointments) {
                 setAppointments(response.data.appointments);
             } else {
