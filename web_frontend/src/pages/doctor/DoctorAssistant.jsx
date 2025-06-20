@@ -526,7 +526,7 @@ const DoctorAssistant = () => {
                     border-radius: 12px;
                     width: 90%;
                     max-width: 500px;
-                    padding: 30px;
+                    padding: 4rem;
                     position: relative;
                     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
                 }
@@ -562,12 +562,13 @@ const DoctorAssistant = () => {
                 
                 .assistant-form input {
                     width: 100%;
-                    padding: 12px 15px;
+                    padding: 0.75rem 0rem 0.75rem 0.5rem;
                     border: 1px solid #ddd;
                     border-radius: 8px;
                     font-size: 1rem;
                 }
-                
+
+
                 .form-row {
                     display: flex;
                     gap: 20px;

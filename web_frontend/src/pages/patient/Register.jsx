@@ -92,11 +92,11 @@ const Register = () => {
               {renderSelect('Gender', 'gender', ['male', 'female'])}
               {renderInput('Email', 'email', 'email', true)}
               {renderInput('Phone', 'phone', 'text', true)}
-              {renderInput('Date of Birth', 'birthday', 'date')}
+              {renderInput('Date of Birth', 'birthday', 'date', true)}
               {renderInput('Password', 'password', 'password', true)}
-              {renderInput('Weight (kg)', 'weight', 'number')}
-              {renderInput('Height (cm)', 'height', 'number')}
-              {renderInput('Address', 'address', 'text', false, true)}
+              {renderInput('Weight (kg)', 'weight', 'number', true)}
+              {renderInput('Height (cm)', 'height', 'number', true)}
+              {renderInput('Address', 'address', 'text', true, true)}
             </div>
 
             <button
