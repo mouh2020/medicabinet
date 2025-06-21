@@ -161,7 +161,7 @@ const Dashboard = () => {
       setNewAppt('');
       fetchData();
     } catch {
-      setApptMessage('Failed to schedule appointment');
+      setApptMessage('You already have a scheduled appointment');
     }
   };
 
@@ -206,13 +206,14 @@ const Dashboard = () => {
               onChange={(e) => setNewAppt(e.target.value)}
               required
               min={today}
+              max={new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]} // max 60 days = ~2 months
               style={styles.dateInput}
             />
             <button 
               type="submit" 
               disabled={!newAppt} 
               style={styles.primaryBtn}
-            >
+             >
               Schedule
             </button>
           </div>
@@ -340,6 +341,7 @@ const Dashboard = () => {
 
 const Reschedule = ({ apptId, token, onSuccess }) => {
   const today = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const maxDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const [newTime, setNewTime] = useState('');
   const [isRescheduling, setIsRescheduling] = useState(false);
 
@@ -368,6 +370,7 @@ const Reschedule = ({ apptId, token, onSuccess }) => {
       <input 
         type="date" 
         min={today}
+        max={maxDate}
         onChange={(e) => setNewTime(e.target.value)} 
         value={newTime}
         required

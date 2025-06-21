@@ -29,12 +29,17 @@ const Register = () => {
     setMessage('');
     setError('');
     setIsLoading(true);
+    if (!/^\d{10,}$/.test(formData.phone)) {
+      setError('Phone number must be 10 digits.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const res = await axios.post('patient/register', formData);
       localStorage.setItem('token', res.data.token);
-      setMessage('Registration successful! Redirecting to dashboard...');
-      setTimeout(() => navigate('/patient/dashboard'), 1500);
+      setMessage('Registration successful! Redirecting to Login page...');
+      setTimeout(() => navigate('/patient/login'), 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
@@ -87,11 +92,11 @@ const Register = () => {
               {renderSelect('Gender', 'gender', ['male', 'female'])}
               {renderInput('Email', 'email', 'email', true)}
               {renderInput('Phone', 'phone', 'text', true)}
-              {renderInput('Date of Birth', 'birthday', 'date')}
+              {renderInput('Date of Birth', 'birthday', 'date', true)}
               {renderInput('Password', 'password', 'password', true)}
-              {renderInput('Weight (kg)', 'weight', 'number')}
-              {renderInput('Height (cm)', 'height', 'number')}
-              {renderInput('Address', 'address', 'text', false, true)}
+              {renderInput('Weight (kg)', 'weight', 'number', true)}
+              {renderInput('Height (cm)', 'height', 'number', true)}
+              {renderInput('Address', 'address', 'text', true, true)}
             </div>
 
             <button
@@ -151,10 +156,16 @@ const Register = () => {
           onChange={handleChange}
           style={styles.input}
           value={formData[name]}
-          placeholder={name === 'weight' || name === 'height' ? 'e.g. 75' : ''}
+          placeholder={
+            name === 'weight' ? 'e.g. 70' :
+            name === 'height' ? 'e.g. 180' :
+            ''
+
+        }
         />
       </div>
     );
+
   }
 
   function renderSelect(label, name, options) {

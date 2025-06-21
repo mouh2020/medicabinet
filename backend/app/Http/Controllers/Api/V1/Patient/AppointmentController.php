@@ -55,6 +55,13 @@ class AppointmentController extends Controller
             return response()->json(['message' => 'Appointment not found'], 404);
         }
 
+        // Prevent modifications if appointment is completed
+        if ($appointment->status === 'completed') {
+            return response()->json([
+                'message' => 'Completed appointments cannot be modified'
+            ], 403);
+        }
+
         $request->validate([
             'time' => 'required|date|after:now'
         ]);
@@ -73,6 +80,13 @@ class AppointmentController extends Controller
 
         if (! $appointment) {
             return response()->json(['message' => 'Appointment not found'], 404);
+        }
+
+        // Prevent cancellation if appointment is completed
+        if ($appointment->status === 'completed') {
+            return response()->json([
+                'message' => 'Completed appointments cannot be cancelled'
+            ], 403);
         }
 
         $appointment->delete();
